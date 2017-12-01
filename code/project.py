@@ -158,6 +158,26 @@ def create_oil_query(dates, con):
     return run_query(qry + "select 1;", con)
 
 
+def convert_usda(con):
+
+    with open('../data_sets/fruit_and_tree_nut_totals.csv') as data_csv:
+        reader = csv.reader(data_csv)
+
+        query = ''
+
+        for row in reader:
+            insert = [row[0].strip(), row[1].strip(), row[2].strip(), row[3].strip()]
+            if insert[2] == '(D)':
+                continue
+            if insert[3] == '':
+                insert[3] = 0
+
+            query += 'INSERT into usda_crop_totals.state_bare(year, state_fips_code, price, cv) ' \
+                     'values({}, {}, {}, {});'.format(insert[0], insert[1], insert[2], insert[3])
+
+    return run_query(query, con)
+
+
 if __name__ == '__main__':
 
     # Try to connect to the database, print the exception on failure. Broad exception for broad range of failures.
@@ -180,10 +200,11 @@ if __name__ == '__main__':
     locs = get_locations_query(conn)
     lat_longs = get_lat_long(locs)
     write_lat_longs(lat_longs, conn)
-    '''
+    
     # Convert oil prices
     oil = convert_oil()
     oil_q = create_oil_query(oil, conn)
-
+    '''
+    c = convert_usda(conn)
     # Always remember to close your connections when you are finished.
     conn.close()
